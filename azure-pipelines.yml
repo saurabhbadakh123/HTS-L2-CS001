@@ -18,6 +18,12 @@ stages:
       - job: BuildJob
         displayName: 'Build Job'
         steps:
+          - task: JavaToolInstaller@0
+            displayName: 'Install JDK 11'
+            inputs:
+              versionSpec: '11'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
           - task: Maven@3
             displayName: 'Build with Maven'
             inputs:
@@ -38,7 +44,6 @@ stages:
               PathtoPublish: 'target/*.jar'
               ArtifactName: 'drop'
               publishLocation: 'Container'
-
           - task: Docker@2
             displayName: 'Build Docker Image'
             inputs:
