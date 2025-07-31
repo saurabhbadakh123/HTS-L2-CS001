@@ -23,6 +23,7 @@ stages:
           - agent.os -equals Linux  # Ensure Linux agents
         
         steps:
+
           # Install JDK 17 and setup environment
           - script: |
               echo "Installing JDK $(javaVersion)..."
@@ -34,6 +35,7 @@ stages:
               java -version
               javac -version
             displayName: 'Install and Configure JDK $(javaVersion)'
+
           # Maven build with test execution
           - task: Maven@3
             displayName: 'Maven Build and Test'
@@ -48,12 +50,14 @@ stages:
               mavenVersionOption: 'Default'
               mavenAuthenticateFeed: false
               sonarQubeRunAnalysis: false
+
           - script: |
               echo "Listing built artifacts..."
               ls -la target/
               echo "JAR file:"
               find target -name "*.jar" -type f
             displayName: 'Verify JAR File Exists'
+
           # Publish build artifacts
           - task: PublishBuildArtifacts@1
             displayName: 'Publish JAR Artifacts'
@@ -71,7 +75,15 @@ stages:
               docker --version
               docker info
             displayName: 'Configure Docker Access'
+            
+          # Login to ACR
+          - task: Docker@2
+            displayName: 'Login to ACR'
+            inputs:
+              command: 'login'
+              containerRegistry: '$(containerRegistry)'
 
+          # Docker build and push
           - task: Docker@2
             displayName: 'Build and Push Docker Image'
             inputs:
