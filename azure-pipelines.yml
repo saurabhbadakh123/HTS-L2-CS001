@@ -8,7 +8,7 @@ variables:
   tag: '$(Build.BuildId)'
 
 pool:
-  vmImage: 'ubuntu-latest'
+  name: 'my-agent'
 
 stages:
   - stage: Build
