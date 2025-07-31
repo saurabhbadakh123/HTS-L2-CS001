@@ -3,57 +3,68 @@ trigger:
     include:
       - main
 
-pool:
-  name: 'vmss-agent'
-
 variables:
   imageName: 'snakegameapp'
   containerRegistry: 'HTS-L2-ACR-SC'
-  tag: '${Build.BuildId}'
+  tag: '$(Build.BuildId)'
+  mavenVersion: '3.9.6'  # Specify Maven version
+  javaVersion: '17'
+  javaHome: '/usr/lib/jvm/java-17-openjdk-amd64'
 
 stages:
   - stage: Build
-    displayName: 'Build Stage'
+    displayName: 'Build and Package'
     jobs:
-      - job: BuildJob
-        displayName: 'Build Job'
+      - job: Build
+        displayName: 'Build Java Application'
+        pool:
+          name: 'vmss-agent'
+          demands:
+          - agent.os -equals Linux  # Ensure Linux agents
+        
         steps:
+          # Install JDK 17 and setup environment
           - script: |
-              echo "Installing JDK 17..."
-              sudo apt update
-              sudo apt install -y openjdk-17-jdk
-              echo "JAVA_HOME_17_X64=/usr/lib/jvm/java-17-openjdk-amd64" | sudo tee -a /etc/environment
-              export JAVA_HOME_17_X64=/usr/lib/jvm/java-17-openjdk-amd64
-              export JAVA_HOME=$JAVA_HOME_17_X64
-              export PATH=$JAVA_HOME/bin:$PATH
+              echo "Installing JDK $(javaVersion)..."
+              sudo apt-get update -y
+              sudo apt-get install -y openjdk-$(javaVersion)-jdk
+              echo "JAVA_HOME=$(javaHome)" | sudo tee -a /etc/environment
+              echo "##vso[task.setvariable variable=JAVA_HOME]$(javaHome)"
+              echo "##vso[task.prependpath]$(javaHome)/bin"
               java -version
-            displayName: 'Install JDK 17 on Agent'
+              javac -version
+            displayName: 'Install and Configure JDK $(javaVersion)'
+          
+          # Maven build with test execution
           - task: Maven@3
-            displayName: 'Build with Maven'
+            displayName: 'Maven Build and Test'
             inputs:
               mavenPomFile: 'pom.xml'
-              goals: 'package'
-              javaHomeOption: 'path'
-              jdkDirectory: '/usr/lib/jvm/java-17-openjdk-amd64'
-              JDKVersionOption: '1.17'
+              goals: 'clean test package'
+              options: '--batch-mode -DskipTests=false -Dmaven.test.failure.ignore=false'
+              publishJUnitResults: true
+              testResultsFiles: '**/target/surefire-reports/TEST-*.xml'
+              javaHomeOption: 'Path'
+              jdkDirectory: '$(javaHome)'
               mavenVersionOption: 'Default'
-          - task: PublishTestResults@2
-            displayName: 'Publish Test Results'
-            inputs:
-              testResultsFormat: 'JUnit'
-              testResultsFiles: '**/surefire-reports/TEST-*.xml'
-              failTaskOnMissingResultsFile: true
+              mavenAuthenticateFeed: false
+              sonarQubeRunAnalysis: false
+            
+          # Publish build artifacts
           - task: PublishBuildArtifacts@1
-            displayName: 'Publish JAR Artifact'
+            displayName: 'Publish Application Artifacts'
             inputs:
               PathtoPublish: 'target/*.jar'
-              ArtifactName: 'drop'
+              ArtifactName: 'application'
               publishLocation: 'Container'
+            
+          # Build and push Docker image
           - task: Docker@2
-            displayName: 'Build Docker Image'
+            displayName: 'Build and Push Docker Image'
             inputs:
               containerRegistry: '$(containerRegistry)'
               repository: '$(imageName)'
-              command: 'buildandPush'
+              command: 'buildAndPush'
               Dockerfile: '**/Dockerfile'
               tags: '$(tag)'
+              arguments: '--build-arg JAR_FILE=target/*.jar'
