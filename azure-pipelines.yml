@@ -4,7 +4,7 @@ trigger:
       - main
 
 pool:
-  name: 'my-agent'
+  name: 'vmss-agent'
 
 variables:
   imageName: 'snakegameapp'
