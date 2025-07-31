@@ -34,7 +34,6 @@ stages:
               java -version
               javac -version
             displayName: 'Install and Configure JDK $(javaVersion)'
-          
           # Maven build with test execution
           - task: Maven@3
             displayName: 'Maven Build and Test'
@@ -59,7 +58,7 @@ stages:
           - task: PublishBuildArtifacts@1
             displayName: 'Publish JAR Artifacts'
             inputs:
-              PathtoPublish: 'target/*.jar'
+              PathtoPublish: 'target/snakegame-0.0.1-SNAPSHOT.jar'
               ArtifactName: 'drop'
               publishLocation: 'Container'
             
@@ -72,4 +71,4 @@ stages:
               command: 'buildAndPush'
               Dockerfile: '**/Dockerfile'
               tags: '$(tag)'
-              arguments: '--build-arg JAR_FILE=target/*.jar'
+              arguments: '--build-arg JAR_FILE=target/snakegame-0.0.1-SNAPSHOT.jar'
