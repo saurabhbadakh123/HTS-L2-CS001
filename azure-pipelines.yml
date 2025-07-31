@@ -1,0 +1,47 @@
+trigger:
+  branches:
+    include:
+      - main
+
+variables:
+  imageName: 'springboot-app'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  # Install Java Development Kit (JDK)
+  - task: JavaToolInstaller@0
+    inputs:
+      versionSpec: '11'
+      jdkArchitectureOption: 'x64'
+      jdkSourceOption: 'PreInstalled'
+      cleanDestinationDirectory: false
+    displayName: 'Install JDK 11'
+
+  # Build with Maven using CmdLine task
+  - task: CmdLine@2
+    inputs:
+      script: 'mvn clean package -DskipTests'
+      workingDirectory: '$(System.DefaultWorkingDirectory)'
+    displayName: 'Build with Maven'
+
+  # Publish JUnit Test Results
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFormat: 'JUnit'
+      testResultsFiles: '**/surefire-reports/TEST-*.xml'
+      mergeTestResults: true
+      failTaskOnFailedTests: true
+    displayName: 'Publish JUnit Test Results'
+
+  # Docker build and push
+  - task: Docker@2
+    inputs:
+      containerRegistry: '<ACR-SERVICE-CONNECTION-NAME>'
+      repository: '$(imageName)'
+      command: 'buildAndPush'
+      Dockerfile: '**/Dockerfile'
+      tags: |
+        $(Build.BuildId)
+    displayName: 'Build and Push Docker Image'
