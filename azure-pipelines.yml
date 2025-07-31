@@ -63,6 +63,15 @@ stages:
               publishLocation: 'Container'
             
           # Build and push Docker image
+          - script: |
+              echo "Setting up Docker permissions..."
+              sudo groupadd docker || true
+              sudo usermod -aG docker $(whoami)
+              sudo chmod 666 /var/run/docker.sock
+              docker --version
+              docker info
+            displayName: 'Configure Docker Access'
+
           - task: Docker@2
             displayName: 'Build and Push Docker Image'
             inputs:
@@ -71,4 +80,3 @@ stages:
               command: 'buildAndPush'
               Dockerfile: '**/Dockerfile'
               tags: '$(tag)'
-              arguments: '--build-arg JAR_FILE=target/snakegame-0.0.1-SNAPSHOT.jar'
