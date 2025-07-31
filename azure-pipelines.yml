@@ -34,7 +34,7 @@ stages:
               mavenPomFile: 'pom.xml'
               goals: 'package'
               javaHomeOption: 'path'
-              jdkDirectory: '/usr/lib/jvm/java-11-openjdk-amd64'
+              jdkDirectory: '/usr/lib/jvm/java-17-openjdk-amd64'
               JDKVersionOption: '1.17'
               mavenVersionOption: 'Default'
           - task: PublishTestResults@2
