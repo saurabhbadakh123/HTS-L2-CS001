@@ -40,8 +40,8 @@ stages:
             displayName: 'Maven Build and Test'
             inputs:
               mavenPomFile: 'pom.xml'
-              goals: 'clean test package'
-              options: '--batch-mode -DskipTests=false -Dmaven.test.failure.ignore=false'
+              goals: 'clean package'
+              options: '-DskipTests=false'
               publishJUnitResults: true
               testResultsFiles: '**/target/surefire-reports/TEST-*.xml'
               javaHomeOption: 'Path'
@@ -49,13 +49,18 @@ stages:
               mavenVersionOption: 'Default'
               mavenAuthenticateFeed: false
               sonarQubeRunAnalysis: false
-            
+          - script: |
+              echo "Listing built artifacts..."
+              ls -la target/
+              echo "JAR file:"
+              find target -name "*.jar" -type f
+            displayName: 'Verify JAR File Exists'
           # Publish build artifacts
           - task: PublishBuildArtifacts@1
-            displayName: 'Publish Application Artifacts'
+            displayName: 'Publish JAR Artifacts'
             inputs:
               PathtoPublish: 'target/*.jar'
-              ArtifactName: 'application'
+              ArtifactName: 'drop'
               publishLocation: 'Container'
             
           # Build and push Docker image
