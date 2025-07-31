@@ -4,7 +4,7 @@ trigger:
       - main
 
 pool:
-  name: 'default'  # Use the default agent pool
+  vmImage: 'ubuntu-latest'
 
 variables:
   imageName: 'snakegameapp'
