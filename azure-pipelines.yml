@@ -5,43 +5,47 @@ trigger:
 
 variables:
   imageName: 'springboot-app'
+  tag: '$(Build.BuildId)'
 
 pool:
   vmImage: 'ubuntu-latest'
 
-steps:
-  # Install Java Development Kit (JDK)
-  - task: JavaToolInstaller@0
-    inputs:
-      versionSpec: '11'
-      jdkArchitectureOption: 'x64'
-      jdkSourceOption: 'PreInstalled'
-      cleanDestinationDirectory: false
-    displayName: 'Install JDK 11'
+stages:
+  - stage: Build
+    displayName: 'Build Stage'
+    jobs: 
+      - job: Build
+        displayName: 'Build Job'
+        steps:
+          - task: Maven@2
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'clean install'
+              publishJUnitResults: true
+              testResultsFiles: '**/surefire-reports/TEST-*.xml'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: '1.11'
+              mavenVersionOption: 'Default'
+              mavenAuthenticateFeed: false
+              sonarQubeRunAnalysis: false
+          - task: PublishPipelineArtifact@1
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)'
+              artifact: 'jar'
+              publishLocation: 'pipeline'
 
-  # Build with Maven using CmdLine task
-  - task: CmdLine@2
-    inputs:
-      script: 'mvn clean package -DskipTests'
-      workingDirectory: '$(System.DefaultWorkingDirectory)'
-    displayName: 'Build with Maven'
-
-  # Publish JUnit Test Results
-  - task: PublishTestResults@2
-    inputs:
-      testResultsFormat: 'JUnit'
-      testResultsFiles: '**/surefire-reports/TEST-*.xml'
-      mergeTestResults: true
-      failTaskOnFailedTests: true
-    displayName: 'Publish JUnit Test Results'
-
-  # Docker build and push
-  - task: Docker@2
-    inputs:
-      containerRegistry: '<ACR-SERVICE-CONNECTION-NAME>'
-      repository: '$(imageName)'
-      command: 'buildAndPush'
-      Dockerfile: '**/Dockerfile'
-      tags: |
-        $(Build.BuildId)
-    displayName: 'Build and Push Docker Image'
+  - stage: DockerPush
+    displayName: 'Docker Build and Push'
+    dependsOn: Build
+    jobs:
+      - job: BuildAndPush
+        displayName: 'Build and Push Docker Image'
+        steps:
+          - task: Docker@2
+            inputs:
+              command: 'buildAndPush'
+              repository: '$(imageName)'
+              dockerfile: '**/Dockerfile'
+              tags: |
+                $(tag)
+              containerRegistry: 'HTS-L2-ACR-SC'
