@@ -35,7 +35,7 @@ stages:
               goals: 'package'
               javaHomeOption: 'path'
               jdkDirectory: '/usr/lib/jvm/java-11-openjdk-amd64'
-              JDKVersionOption: '1.11'
+              JDKVersionOption: '1.17'
               mavenVersionOption: 'Default'
           - task: PublishTestResults@2
             displayName: 'Publish Test Results'
