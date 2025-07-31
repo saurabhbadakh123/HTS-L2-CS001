@@ -17,6 +17,11 @@ stages:
       - job: Build
         displayName: 'Build Job'
         steps:
+          - task: JavaToolInstaller@0
+            inputs:
+              versionSpec: '17'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
           - task: Maven@2
             inputs:
               mavenPomFile: 'pom.xml'
