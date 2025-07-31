@@ -28,6 +28,11 @@ stages:
               export PATH=$JAVA_HOME/bin:$PATH
               java -version
             displayName: 'Install JDK 11 on Agent'
+          - task: JavaToolInstaller@0
+            inputs:
+              versionSpec: '11'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
           - task: Maven@3
             displayName: 'Build with Maven'
             inputs:
