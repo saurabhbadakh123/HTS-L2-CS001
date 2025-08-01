@@ -67,7 +67,7 @@ stages:
           - task: PublishBuildArtifacts@1
             displayName: 'Publish JAR Artifacts'
             inputs:
-              PathtoPublish: 'target/snakegame-*.jar'
+              PathtoPublish: 'target/snakegame-0.0.1-SNAPSHOT.jar'
               ArtifactName: 'drop'
               publishLocation: 'Container'
 
