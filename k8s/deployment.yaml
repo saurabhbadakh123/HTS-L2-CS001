@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: snakegame-deployment
+  labels:
+    app: snakegame
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: snakegame
+  template:
+    metadata:
+      labels:
+        app: snakegame
+    spec:
+      containers:
+        - name: snakegame-container
+          image: htsl2cs01.azurecr.io/snakegameapp:__IMAGE_TAG__
+          ports:
+            - containerPort: 8080
