@@ -16,7 +16,7 @@ variables:
   - name: javaHome
     value: '/usr/lib/jvm/java-17-openjdk-amd64'
   - name: acrLoginServer
-    value: cs01appacr-cge9e8hycwchcrf0.azurecr.io
+    value: htsl2cs01.azurecr.io
 
 stages:
   - stage: Build
