@@ -31,8 +31,9 @@ stages:
             steps:
               - checkout: self
                 displayName: 'Checkout repository'
+
               - script: |
-                  sed -i 's#__IMAGE_TAG__#$(tag)#g' deployment.yaml
+                  sed -i 's#__IMAGE_TAG__#$(tag)#g' snakegame/k8s/deployment.yaml
                 displayName: 'Inject image tag into manifest'
 
               - task: Kubernetes@1
@@ -44,8 +45,8 @@ stages:
                   command: apply
                   useConfigurationFile: true
                   configuration: |
-                    deployment.yaml
-                    service.yaml
+                    snakegame/k8s/deployment.yaml
+                    snakegame/k8s/service.yaml
 
 - stage: Deploy_Test
   displayName: 'Deploy to Test'
@@ -63,8 +64,9 @@ stages:
             steps:
               - checkout: self
                 displayName: 'Checkout repository'
+
               - script: |
-                  sed -i 's#__IMAGE_TAG__#$(tag)#g' deployment.yaml
+                  sed -i 's#__IMAGE_TAG__#$(tag)#g' snakegame/k8s/deployment.yaml
                 displayName: 'Inject image tag into manifest'
 
               - task: Kubernetes@1
@@ -76,8 +78,8 @@ stages:
                   command: apply
                   useConfigurationFile: true
                   configuration: |
-                    deployment.yaml
-                    service.yaml
+                    snakegame/k8s/deployment.yaml
+                    snakegame/k8s/service.yaml
 
 - stage: Deploy_Prod
   displayName: 'Deploy to Prod'
@@ -95,8 +97,9 @@ stages:
             steps:
               - checkout: self
                 displayName: 'Checkout repository'
+
               - script: |
-                  sed -i 's#__IMAGE_TAG__#$(tag)#g' deployment.yaml
+                  sed -i 's#__IMAGE_TAG__#$(tag)#g' snakegame/k8s/deployment.yaml
                 displayName: 'Inject image tag into manifest'
 
               - task: Kubernetes@1
@@ -108,5 +111,5 @@ stages:
                   command: apply
                   useConfigurationFile: true
                   configuration: |
-                    deployment.yaml
-                    service.yaml
+                    snakegame/k8s/deployment.yaml
+                    snakegame/k8s/service.yaml
