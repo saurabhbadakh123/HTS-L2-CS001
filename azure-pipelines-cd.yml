@@ -19,6 +19,8 @@ stages:
       - deployment: DeployDev
         displayName: Deploy to AKS - Dev
         environment: 'dev'
+        pool:
+          name: 'vmss-agent'
         strategy:
           runOnce:
             deploy:
@@ -50,6 +52,8 @@ stages:
       - deployment: DeployTest
         displayName: Deploy to AKS - Test
         environment: 'test'
+        pool:
+          name: 'vmss-agent'
         strategy:
           runOnce:
             deploy:
@@ -81,6 +85,8 @@ stages:
       - deployment: DeployProd
         displayName: Deploy to AKS - Prod
         environment: 'prod'
+        pool:
+          name: 'vmss-agent'
         strategy:
           runOnce:
             deploy:
