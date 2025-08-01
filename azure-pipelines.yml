@@ -5,7 +5,7 @@ trigger:
 
 variables:
   imageName: 'snakegameapp'
-  containerRegistry: 'HTS-L2-ACR-SC'
+  containerRegistry: 'HTS-L2-ACR-SC'  # Must match service connection name exactly
   tag: '$(Build.BuildId)'
   javaVersion: '17'
   javaHome: '/usr/lib/jvm/java-17-openjdk-amd64'
@@ -22,15 +22,22 @@ stages:
             - agent.os -equals Linux
 
         steps:
-          # Install JDK
+          # Install JDK and Docker with proper permissions
           - script: |
+              echo "Installing dependencies..."
               sudo apt-get update -y
-              sudo apt-get install -y openjdk-$(javaVersion)-jdk docker.io
-              echo "JAVA_HOME=$(javaHome)" | sudo tee -a /etc/environment
-              echo "##vso[task.setvariable variable=JAVA_HOME]$(javaHome)"
-              echo "##vso[task.prependpath]$(javaHome)/bin"
+              sudo apt-get install -y openjdk-$(javaVersion)-jdk docker.io docker-buildx
+              
+              echo "Configuring Docker permissions..."
+              sudo groupadd docker || true
+              sudo usermod -aG docker $(whoami)
+              sudo chmod 666 /var/run/docker.sock
+              
+              echo "Environment:"
               java -version
-            displayName: 'Install JDK and Docker'
+              docker --version
+              docker buildx version
+            displayName: 'Setup Environment'
 
           # Maven build
           - task: Maven@3
@@ -44,28 +51,24 @@ stages:
               javaHomeOption: 'Path'
               jdkDirectory: '$(javaHome)'
 
-          # Verify build output
+          # Verify JAR file
           - script: |
-              echo "Artifacts in target:"
-              find target -name "*.jar"
-            displayName: 'Verify JAR Output'
+              echo "Build output:"
+              ls -la target/
+              JAR_FILE=$(find target -name "snakegame-*.jar" | head -1)
+              echo "##vso[task.setvariable variable=JAR_PATH]$JAR_FILE"
+              echo "Using JAR file: $JAR_FILE"
+            displayName: 'Verify Build Output'
 
           # Publish JAR
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Artifacts'
             inputs:
-              PathtoPublish: 'target/snakegame-0.0.1-SNAPSHOT.jar'
+              PathtoPublish: '$(JAR_PATH)'
               ArtifactName: 'drop'
               publishLocation: 'Container'
 
-          # Docker login
-          - task: Docker@2
-            displayName: 'Login to ACR'
-            inputs:
-              command: 'login'
-              containerRegistry: '$(containerRegistry)'
-
-          # Build and push Docker image
+          # Docker build and push using service connection
           - task: Docker@2
             displayName: 'Build and Push Image'
             inputs:
@@ -74,3 +77,4 @@ stages:
               command: 'buildAndPush'
               Dockerfile: '**/Dockerfile'
               tags: '$(tag)'
+              arguments: '--load'  # Required for BuildKit
