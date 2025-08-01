@@ -29,11 +29,11 @@ stages:
 
                 - script: |
                     sed -i 's#__IMAGE_TAG__#$(tag)#g' k8s/deployment-dev.yml
-                    echo "Using image: htsl2cs01.azurecr.io/snakegameapp:$(tag)"
-                  displayName: Replace image tag
+                    echo "Using image: $(acrLoginServer)/$(imageName):$(tag)"
+                  displayName: Replace image tag in Dev manifest
 
                 - task: Kubernetes@1
-                  displayName: Apply Kubernetes Manifests (Dev)
+                  displayName: Apply Deployment (Dev)
                   inputs:
                     connectionType: 'Azure Resource Manager'
                     azureSubscriptionEndpoint: 'HTS-L2-ARM-SC'
@@ -76,11 +76,11 @@ stages:
 
                 - script: |
                     sed -i 's#__IMAGE_TAG__#$(tag)#g' k8s/deployment-test.yml
-                    echo "Using image: htsl2cs01.azurecr.io/snakegameapp:$(tag)"
-                  displayName: Replace image tag
+                    echo "Using image: $(acrLoginServer)/$(imageName):$(tag)"
+                  displayName: Replace image tag in Test manifest
 
                 - task: Kubernetes@1
-                  displayName: Apply Kubernetes Manifests (Test)
+                  displayName: Apply Deployment (Test)
                   inputs:
                     connectionType: 'Azure Resource Manager'
                     azureSubscriptionEndpoint: 'HTS-L2-ARM-SC'
@@ -93,7 +93,7 @@ stages:
                     secretType: 'None'
 
                 - task: Kubernetes@1
-                  displayName: Apply Service (test)
+                  displayName: Apply Service (Test)
                   inputs:
                     connectionType: 'Azure Resource Manager'
                     azureSubscriptionEndpoint: 'HTS-L2-ARM-SC'
@@ -123,11 +123,11 @@ stages:
 
                 - script: |
                     sed -i 's#__IMAGE_TAG__#$(tag)#g' k8s/deployment-prod.yml
-                    echo "Using image: htsl2cs01.azurecr.io/snakegameapp:$(tag)"
-                  displayName: Replace image tag
+                    echo "Using image: $(acrLoginServer)/$(imageName):$(tag)"
+                  displayName: Replace image tag in Prod manifest
 
                 - task: Kubernetes@1
-                  displayName: Apply Kubernetes Manifests (Prod)
+                  displayName: Apply Deployment (Prod)
                   inputs:
                     connectionType: 'Azure Resource Manager'
                     azureSubscriptionEndpoint: 'HTS-L2-ARM-SC'
@@ -140,7 +140,7 @@ stages:
                     secretType: 'None'
 
                 - task: Kubernetes@1
-                  displayName: Apply Service (prod)
+                  displayName: Apply Service (Prod)
                   inputs:
                     connectionType: 'Azure Resource Manager'
                     azureSubscriptionEndpoint: 'HTS-L2-ARM-SC'

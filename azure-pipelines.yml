@@ -10,7 +10,7 @@ variables:
   - name: containerRegistry
     value: 'HTS-L2-ACR-SC'
   - name: tag
-    value: '$(Build.BuildId)'
+    value: '$(Build.BuildNumber)'   # This must match what CD uses via ciPipeline.runName
   - name: javaVersion
     value: '17'
   - name: javaHome
@@ -80,6 +80,7 @@ stages:
             displayName: 'Login to ACR (Safe Debug)'
 
           - script: |
+              echo "Tag used for image: $(tag)"
               docker login $(acrLoginServer) -u $(acrAdminUsername) -p $(acrAdminPassword)
               docker build -t $(acrLoginServer)/$(imageName):$(tag) -f Dockerfile .
               docker images
