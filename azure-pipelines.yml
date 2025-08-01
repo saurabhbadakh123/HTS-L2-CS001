@@ -4,13 +4,19 @@ trigger:
       - main
 
 variables:
-  - group: ACR-Credentials  
-  imageName: 'snakegameapp'
-  containerRegistry: 'HTS-L2-ACR-SC'
-  tag: '$(Build.BuildId)'
-  mavenVersion: '3.9.6'
-  javaVersion: '17'
-  javaHome: '/usr/lib/jvm/java-17-openjdk-amd64'
+  - group: ACR-Credentials
+  - name: imageName
+    value: 'snakegameapp'
+  - name: containerRegistry
+    value: 'HTS-L2-ACR-SC'
+  - name: tag
+    value: '$(Build.BuildId)'
+  - name: mavenVersion
+    value: '3.9.6'
+  - name: javaVersion
+    value: '17'
+  - name: javaHome
+    value: '/usr/lib/jvm/java-17-openjdk-amd64'
 
 stages:
   - stage: Build
