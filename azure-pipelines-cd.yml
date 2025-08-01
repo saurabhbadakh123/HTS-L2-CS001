@@ -20,84 +20,93 @@ stages:
 - stage: Deploy_Dev
   displayName: 'Deploy to Dev'
   jobs:
-    - job: DeployDev
+    - deployment: DeployDev
       displayName: 'Deploy to AKS (Dev)'
       environment: 'dev'
       pool:
         vmImage: 'ubuntu-latest'
-      steps:
-        - script: |
-            sed -i 's#__IMAGE_TAG__#$(tag)#g' manifests/deployment.yaml
-          displayName: 'Inject image tag into manifest'
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+              - script: |
+                  sed -i 's#__IMAGE_TAG__#$(tag)#g' manifests/deployment.yaml
+                displayName: 'Inject image tag into manifest'
 
-        - task: Kubernetes@1
-          displayName: 'Deploy to AKS - Dev'
-          inputs:
-            connectionType: 'Azure Resource Manager'
-            azureSubscriptionEndpoint: 'HTS-L2-AKS-SC'
-            azureResourceGroup: 'HTS-L2-CS001-RG'
-            kubernetesCluster: 'HTS-L2-CS001-AKS'
-            namespace: 'dev'
-            command: apply
-            useConfigurationFile: true
-            configuration: |
-              manifests/deployment.yaml
-              manifests/service.yaml
+              - task: Kubernetes@1
+                displayName: 'Deploy to AKS - Dev'
+                inputs:
+                  connectionType: 'Azure Resource Manager'
+                  azureSubscriptionEndpoint: 'HTS-L2-AKS-SC'
+                  azureResourceGroup: 'HTS-L2-CS001-RG'
+                  kubernetesCluster: 'HTS-L2-CS001-AKS'
+                  namespace: 'dev'
+                  command: apply
+                  useConfigurationFile: true
+                  configuration: |
+                    manifests/deployment.yaml
+                    manifests/service.yaml
 
 - stage: Deploy_Test
   displayName: 'Deploy to Test'
   dependsOn: Deploy_Dev
   condition: succeeded()
   jobs:
-    - job: DeployTest
+    - deployment: DeployTest
       displayName: 'Deploy to AKS (Test)'
       environment: 'test'
       pool:
         vmImage: 'ubuntu-latest'
-      steps:
-        - script: |
-            sed -i 's#__IMAGE_TAG__#$(tag)#g' manifests/deployment.yaml
-          displayName: 'Inject image tag into manifest'
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+              - script: |
+                  sed -i 's#__IMAGE_TAG__#$(tag)#g' manifests/deployment.yaml
+                displayName: 'Inject image tag into manifest'
 
-        - task: Kubernetes@1
-          displayName: 'Deploy to AKS - Test'
-          inputs:
-            connectionType: 'Azure Resource Manager'
-            azureSubscriptionEndpoint: 'HTS-L2-AKS-SC'
-            azureResourceGroup: 'HTS-L2-CS001-RG'
-            kubernetesCluster: 'HTS-L2-CS001-AKS'
-            namespace: 'test'
-            command: apply
-            useConfigurationFile: true
-            configuration: |
-              manifests/deployment.yaml
-              manifests/service.yaml
+              - task: Kubernetes@1
+                displayName: 'Deploy to AKS - Test'
+                inputs:
+                  connectionType: 'Azure Resource Manager'
+                  azureSubscriptionEndpoint: 'HTS-L2-AKS-SC'
+                  azureResourceGroup: 'HTS-L2-CS001-RG'
+                  kubernetesCluster: 'HTS-L2-CS001-AKS'
+                  namespace: 'test'
+                  command: apply
+                  useConfigurationFile: true
+                  configuration: |
+                    manifests/deployment.yaml
+                    manifests/service.yaml
 
 - stage: Deploy_Prod
   displayName: 'Deploy to Prod'
   dependsOn: Deploy_Test
   condition: succeeded()
   jobs:
-    - job: DeployProd
+    - deployment: DeployProd
       displayName: 'Deploy to AKS (Prod)'
       environment: 'prod'
       pool:
         vmImage: 'ubuntu-latest'
-      steps:
-        - script: |
-            sed -i 's#__IMAGE_TAG__#$(tag)#g' manifests/deployment.yaml
-          displayName: 'Inject image tag into manifest'
+      strategy:
+        runOnce:
+          deploy:
+            steps:
+              - script: |
+                  sed -i 's#__IMAGE_TAG__#$(tag)#g' manifests/deployment.yaml
+                displayName: 'Inject image tag into manifest'
 
-        - task: Kubernetes@1
-          displayName: 'Deploy to AKS - Prod'
-          inputs:
-            connectionType: 'Azure Resource Manager'
-            azureSubscriptionEndpoint: 'HTS-L2-AKS-SC'
-            azureResourceGroup: 'HTS-L2-CS001-RG'
-            kubernetesCluster: 'HTS-L2-CS001-AKS'
-            namespace: 'prod'
-            command: apply
-            useConfigurationFile: true
-            configuration: |
-              manifests/deployment.yaml
-              manifests/service.yaml
+              - task: Kubernetes@1
+                displayName: 'Deploy to AKS - Prod'
+                inputs:
+                  connectionType: 'Azure Resource Manager'
+                  azureSubscriptionEndpoint: 'HTS-L2-AKS-SC'
+                  azureResourceGroup: 'HTS-L2-CS001-RG'
+                  kubernetesCluster: 'HTS-L2-CS001-AKS'
+                  namespace: 'prod'
+                  command: apply
+                  useConfigurationFile: true
+                  configuration: |
+                    manifests/deployment.yaml
+                    manifests/service.yaml
