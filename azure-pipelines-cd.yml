@@ -8,116 +8,98 @@ resources:
       trigger: true
 
 variables:
-  - name: acrLoginServer
-    value: htsl2cs01.azurecr.io
-  - name: imageName
-    value: snakegameapp
-  - name: tag
-    value: $(resources.pipeline.ciPipeline.runName)
+  acrLoginServer: 'htsl2cs01.azurecr.io'
+  imageName: 'snakegameapp'
+  tag: $(resources.pipeline.ciPipeline.runName)
 
 stages:
+  - stage: Deploy_Dev
+    displayName: Deploy to Dev
+    jobs:
+      - deployment: DeployDev
+        displayName: Deploy to AKS - Dev
+        environment: 'dev'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
 
-- stage: Deploy_Dev
-  displayName: 'Deploy to Dev'
-  jobs:
-    - deployment: DeployDev
-      displayName: 'Deploy to AKS (Dev)'
-      environment: 'dev'
-      pool:
-        name: 'vmss-agent'
-      strategy:
-        runOnce:
-          deploy:
-            steps:
-              - checkout: self
-                displayName: 'Checkout repository'
+                - script: |
+                    sed -i 's#__IMAGE_TAG__#$(tag)#g' k8s/deployment.yml
+                  displayName: Replace image tag
 
-              # Add verification step to debug file locations
-              - script: |
-                  ls -la
-                  ls -la k8s/
-                displayName: 'Verify repository structure'
+                - task: Kubernetes@1
+                  displayName: Apply Kubernetes Manifests (Dev)
+                  inputs:
+                    connectionType: 'Azure Resource Manager'
+                    azureSubscription: 'HTS-L2-AKS-SC'
+                    azureResourceGroup: 'HTS-L2-CS001-RG'
+                    kubernetesCluster: 'HTS-L2-CS001-AKS'
+                    namespace: 'dev'
+                    command: 'apply'
+                    useConfigurationFile: true
+                    configuration: 'k8s/deployment.yml'
+                    secretType: 'None'
 
-              # Update sed command to handle both Linux and Windows agents
-              - bash: |
-                  sed -i 's#__IMAGE_TAG__#$(tag)#g' $(Build.SourcesDirectory)/k8s/deployment.yml
-                displayName: 'Inject image tag into manifest'
+  - stage: Deploy_Test
+    displayName: Deploy to Test
+    dependsOn: Deploy_Dev
+    condition: succeeded()
+    jobs:
+      - deployment: DeployTest
+        displayName: Deploy to AKS - Test
+        environment: 'test'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
 
-              - task: Kubernetes@1
-                displayName: 'Deploy to AKS - Dev'
-                inputs:
-                  connectionType: 'Kubernetes Service Connection'
-                  kubernetesServiceEndpoint: 'HTS-L2-AKS-SC'
-                  namespace: 'dev'
-                  command: apply
-                  useConfigurationFile: true
-                  configuration: |
-                    $(Build.SourcesDirectory)/k8s/deployment.yml
-                    $(Build.SourcesDirectory)/k8s/service.yml
+                - script: |
+                    sed -i 's#__IMAGE_TAG__#$(tag)#g' k8s/deployment.yml
+                  displayName: Replace image tag
 
-# Similar updates for Test and Prod stages...
-- stage: Deploy_Test
-  displayName: 'Deploy to Test'
-  dependsOn: Deploy_Dev
-  condition: succeeded()
-  jobs:
-    - deployment: DeployTest
-      displayName: 'Deploy to AKS (Test)'
-      environment: 'test'
-      pool:
-        name: 'vmss-agent'
-      strategy:
-        runOnce:
-          deploy:
-            steps:
-              - checkout: self
-                displayName: 'Checkout repository'
+                - task: Kubernetes@1
+                  displayName: Apply Kubernetes Manifests (Test)
+                  inputs:
+                    connectionType: 'Azure Resource Manager'
+                    azureSubscription: 'HTS-L2-AKS-SC'
+                    azureResourceGroup: 'HTS-L2-CS001-RG'
+                    kubernetesCluster: 'HTS-L2-CS001-AKS'
+                    namespace: 'test'
+                    command: 'apply'
+                    useConfigurationFile: true
+                    configuration: 'k8s/deployment.yml'
+                    secretType: 'None'
 
-              - bash: |
-                  sed -i 's#__IMAGE_TAG__#$(tag)#g' $(Build.SourcesDirectory)/k8s/deployment.yml
-                displayName: 'Inject image tag into manifest'
+  - stage: Deploy_Prod
+    displayName: Deploy to Prod
+    dependsOn: Deploy_Test
+    condition: succeeded()
+    jobs:
+      - deployment: DeployProd
+        displayName: Deploy to AKS - Prod
+        environment: 'prod'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
 
-              - task: Kubernetes@1
-                displayName: 'Deploy to AKS - Test'
-                inputs:
-                  connectionType: 'Kubernetes Service Connection'
-                  kubernetesServiceEndpoint: 'HTS-L2-AKS-SC'
-                  namespace: 'test'
-                  command: apply
-                  useConfigurationFile: true
-                  configuration: |
-                    $(Build.SourcesDirectory)/k8s/deployment.yml
-                    $(Build.SourcesDirectory)/k8s/service.yml
+                - script: |
+                    sed -i 's#__IMAGE_TAG__#$(tag)#g' k8s/deployment.yml
+                  displayName: Replace image tag
 
-- stage: Deploy_Prod
-  displayName: 'Deploy to Prod'
-  dependsOn: Deploy_Test
-  condition: succeeded()
-  jobs:
-    - deployment: DeployProd
-      displayName: 'Deploy to AKS (Prod)'
-      environment: 'prod'
-      pool:
-        name: 'vmss-agent'
-      strategy:
-        runOnce:
-          deploy:
-            steps:
-              - checkout: self
-                displayName: 'Checkout repository'
-
-              - bash: |
-                  sed -i 's#__IMAGE_TAG__#$(tag)#g' $(Build.SourcesDirectory)/k8s/deployment.yml
-                displayName: 'Inject image tag into manifest'
-
-              - task: Kubernetes@1
-                displayName: 'Deploy to AKS - Prod'
-                inputs:
-                  connectionType: 'Kubernetes Service Connection'
-                  kubernetesServiceEndpoint: 'HTS-L2-AKS-SC'
-                  namespace: 'prod'
-                  command: apply
-                  useConfigurationFile: true
-                  configuration: |
-                    $(Build.SourcesDirectory)/k8s/deployment.yml
-                    $(Build.SourcesDirectory)/k8s/service.yml
+                - task: Kubernetes@1
+                  displayName: Apply Kubernetes Manifests (Prod)
+                  inputs:
+                    connectionType: 'Azure Resource Manager'
+                    azureSubscription: 'HTS-L2-AKS-SC'
+                    azureResourceGroup: 'HTS-L2-CS001-RG'
+                    kubernetesCluster: 'HTS-L2-CS001-AKS'
+                    namespace: 'prod'
+                    command: 'apply'
+                    useConfigurationFile: true
+                    configuration: 'k8s/deployment.yml'
+                    secretType: 'None'
