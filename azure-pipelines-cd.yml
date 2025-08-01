@@ -45,6 +45,19 @@ stages:
                     configuration: 'k8s/deployment-dev.yml'
                     secretType: 'None'
 
+                - task: Kubernetes@1
+                  displayName: Apply Service (Dev)
+                  inputs:
+                    connectionType: 'Azure Resource Manager'
+                    azureSubscriptionEndpoint: 'HTS-L2-ARM-SC'
+                    azureResourceGroup: 'HTS-L2-CS001-RG'
+                    kubernetesCluster: 'HTS-L2-CS001-AKS'
+                    namespace: 'dev'
+                    command: 'apply'
+                    useConfigurationFile: true
+                    configuration: 'k8s/service-dev.yml'
+                    secretType: 'None'
+
   - stage: Deploy_Test
     displayName: Deploy to Test
     dependsOn: Deploy_Dev
@@ -79,6 +92,19 @@ stages:
                     configuration: 'k8s/deployment-test.yml'
                     secretType: 'None'
 
+                - task: Kubernetes@1
+                  displayName: Apply Service (test)
+                  inputs:
+                    connectionType: 'Azure Resource Manager'
+                    azureSubscriptionEndpoint: 'HTS-L2-ARM-SC'
+                    azureResourceGroup: 'HTS-L2-CS001-RG'
+                    kubernetesCluster: 'HTS-L2-CS001-AKS'
+                    namespace: 'test'
+                    command: 'apply'
+                    useConfigurationFile: true
+                    configuration: 'k8s/service-test.yml'
+                    secretType: 'None'
+
   - stage: Deploy_Prod
     displayName: Deploy to Prod
     dependsOn: Deploy_Test
@@ -111,4 +137,17 @@ stages:
                     command: 'apply'
                     useConfigurationFile: true
                     configuration: 'k8s/deployment-prod.yml'
+                    secretType: 'None'
+
+                - task: Kubernetes@1
+                  displayName: Apply Service (prod)
+                  inputs:
+                    connectionType: 'Azure Resource Manager'
+                    azureSubscriptionEndpoint: 'HTS-L2-ARM-SC'
+                    azureResourceGroup: 'HTS-L2-CS001-RG'
+                    kubernetesCluster: 'HTS-L2-CS001-AKS'
+                    namespace: 'prod'
+                    command: 'apply'
+                    useConfigurationFile: true
+                    configuration: 'k8s/service-prod.yml'
                     secretType: 'None'
