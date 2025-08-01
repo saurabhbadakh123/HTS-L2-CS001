@@ -8,12 +8,9 @@ resources:
       trigger: true
 
 variables:
-  - name: acrLoginServer
-    value: htsl2cs01.azurecr.io
-  - name: imageName
-    value: snakegameapp
-  - name: tag
-    value: $(resources.pipeline.ciPipeline.runName)
+  acrLoginServer: htsl2cs01.azurecr.io
+  imageName: snakegameapp
+  tag: $(resources.pipeline.ciPipeline.runName)
 
 stages:
 
@@ -30,11 +27,13 @@ stages:
           deploy:
             steps:
               - checkout: self
-                displayName: 'Checkout repository'
 
-              - script: |
-                  sed -i 's#__IMAGE_TAG__#$(tag)#g' ./k8s/deployment.yml
+              - task: FileTransform@1
                 displayName: 'Inject image tag into manifest'
+                inputs:
+                  folderPath: '$(System.DefaultWorkingDirectory)/snakegame/k8s'
+                  fileType: 'yaml'
+                  targetFiles: 'deployment.yml'
 
               - task: Kubernetes@1
                 displayName: 'Deploy to AKS - Dev'
@@ -45,9 +44,8 @@ stages:
                   command: apply
                   useConfigurationFile: true
                   configuration: |
-                    ./k8s/deployment.yml
+                    ./snakegame/k8s/deployment.yml
                     ./snakegame/k8s/service.yml
-
 
 - stage: Deploy_Test
   displayName: 'Deploy to Test'
@@ -64,11 +62,13 @@ stages:
           deploy:
             steps:
               - checkout: self
-                displayName: 'Checkout repository'
 
-              - script: |
-                  sed -i 's#__IMAGE_TAG__#$(tag)#g' ./k8s/deployment.yml
+              - task: FileTransform@1
                 displayName: 'Inject image tag into manifest'
+                inputs:
+                  folderPath: '$(System.DefaultWorkingDirectory)/snakegame/k8s'
+                  fileType: 'yaml'
+                  targetFiles: 'deployment.yml'
 
               - task: Kubernetes@1
                 displayName: 'Deploy to AKS - Test'
@@ -79,9 +79,8 @@ stages:
                   command: apply
                   useConfigurationFile: true
                   configuration: |
-                    ./k8s/deployment.yml
+                    ./snakegame/k8s/deployment.yml
                     ./snakegame/k8s/service.yml
-
 
 - stage: Deploy_Prod
   displayName: 'Deploy to Prod'
@@ -98,11 +97,13 @@ stages:
           deploy:
             steps:
               - checkout: self
-                displayName: 'Checkout repository'
 
-              - script: |
-                  sed -i 's#__IMAGE_TAG__#$(tag)#g' ./k8s/deployment.yml
+              - task: FileTransform@1
                 displayName: 'Inject image tag into manifest'
+                inputs:
+                  folderPath: '$(System.DefaultWorkingDirectory)/snakegame/k8s'
+                  fileType: 'yaml'
+                  targetFiles: 'deployment.yml'
 
               - task: Kubernetes@1
                 displayName: 'Deploy to AKS - Prod'
@@ -113,5 +114,5 @@ stages:
                   command: apply
                   useConfigurationFile: true
                   configuration: |
-                    ./k8s/deployment.yml
+                    ./snakegame/k8s/deployment.yml
                     ./snakegame/k8s/service.yml
