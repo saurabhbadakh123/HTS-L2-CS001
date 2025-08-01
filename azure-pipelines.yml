@@ -76,14 +76,13 @@ stages:
               echo "$(acrAdminPassword)" | sudo docker login $(acrLoginServer) -u $(acrAdminUsername) --password-stdin
             displayName: 'Login to ACR'
 
-          - task: Docker@2
-            displayName: 'Build and Push Image'
-            inputs:
-              containerRegistry: '&(containerRegistry)'
-              repository: '$(imageName)'
-              command: 'buildAndPush'
-              Dockerfile: '**/Dockerfile'
-              tags: '$(tag)'
+          - script: |
+              echo "Building image..."
+              docker build -t $(acrLoginServer)/$(imageName):$(tag) -f Dockerfile .
+
+              echo "Pushing image to ACR..."
+              docker push $(acrLoginServer)/$(imageName):$(tag)
+            displayName: 'Build and Push Docker Image Manually'
 
           - script: |
               docker logout $(acrLoginServer)
