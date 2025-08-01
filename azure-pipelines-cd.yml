@@ -3,8 +3,8 @@ pr: none
 
 resources:
   pipelines:
-    - pipeline: ciPipeline 
-      source: HTS-L2-CS001
+    - pipeline: ciPipeline
+      source: Thivagar007.HTS-L2-CS001
       trigger: true
 
 variables:
@@ -13,7 +13,7 @@ variables:
   - name: imageName
     value: snakegameapp
   - name: tag
-    value: $(Build.BuildId)
+    value: $(resources.pipeline.ciPipeline.runName)
 
 stages:
 
