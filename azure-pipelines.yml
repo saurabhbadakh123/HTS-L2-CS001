@@ -4,11 +4,19 @@ trigger:
       - main
 
 variables:
-  imageName: 'snakegameapp'
-  containerRegistry: 'HTS-L2-ACR-SC'  # Must match service connection name exactly
-  tag: '$(Build.BuildId)'
-  javaVersion: '17'
-  javaHome: '/usr/lib/jvm/java-17-openjdk-amd64'
+  - group: ACR-Credentials
+  - name: imageName
+    value: 'snakegameapp'
+  - name: containerRegistry
+    value: 'HTS-L2-ACR-SC'
+  - name: tag
+    value: '$(Build.BuildId)'
+  - name: javaVersion
+    value: '17'
+  - name: javaHome
+    value: '/usr/lib/jvm/java-17-openjdk-amd64'
+  - name: acrLoginServer
+    value: cs01appacr.azurecr.io
 
 stages:
   - stage: Build
@@ -22,7 +30,6 @@ stages:
             - agent.os -equals Linux
 
         steps:
-          # Install JDK and Docker with proper permissions
           - script: |
               echo "Installing dependencies..."
               sudo apt-get update -y
@@ -39,7 +46,6 @@ stages:
               docker buildx version
             displayName: 'Setup Environment'
 
-          # Maven build
           - task: Maven@3
             displayName: 'Build with Maven'
             inputs:
@@ -51,7 +57,6 @@ stages:
               javaHomeOption: 'Path'
               jdkDirectory: '$(javaHome)'
 
-          # Verify JAR file
           - script: |
               echo "Build output:"
               ls -la target/
@@ -60,7 +65,6 @@ stages:
               echo "Using JAR file: $JAR_FILE"
             displayName: 'Verify Build Output'
 
-          # Publish JAR
           - task: PublishBuildArtifacts@1
             displayName: 'Publish Artifacts'
             inputs:
@@ -68,13 +72,19 @@ stages:
               ArtifactName: 'drop'
               publishLocation: 'Container'
 
-          # Docker build and push using service connection
+          - script: |
+              echo "$(acrAdminPassword)" | sudo docker login $(acrLoginServer) -u $(acrAdminUsername) --password-stdin
+            displayName: 'Login to ACR'
+
           - task: Docker@2
             displayName: 'Build and Push Image'
             inputs:
-              containerRegistry: '$(containerRegistry)'
+              containerRegistry: 'none'
               repository: '$(imageName)'
               command: 'buildAndPush'
               Dockerfile: '**/Dockerfile'
               tags: '$(tag)'
-              arguments: '--load'  # Required for BuildKit
+              
+          - script: |
+              docker logout $(acrLoginServer)
+            displayName: 'Logout from ACR'
