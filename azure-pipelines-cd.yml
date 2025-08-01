@@ -33,7 +33,7 @@ stages:
                 displayName: 'Checkout repository'
 
               - script: |
-                  sed -i 's#__IMAGE_TAG__#$(tag)#g' *./k8s/deployment.yml
+                  sed -i 's#__IMAGE_TAG__#$(tag)#g' ./k8s/deployment.yml
                 displayName: 'Inject image tag into manifest'
 
               - task: Kubernetes@1
@@ -45,8 +45,8 @@ stages:
                   command: apply
                   useConfigurationFile: true
                   configuration: |
-                    *./k8s/deployment.yml
-                    *./snakegame/k8s/service.yml
+                    ./k8s/deployment.yml
+                    ./snakegame/k8s/service.yml
 
 
 - stage: Deploy_Test
@@ -67,7 +67,7 @@ stages:
                 displayName: 'Checkout repository'
 
               - script: |
-                  sed -i 's#__IMAGE_TAG__#$(tag)#g' *./k8s/deployment.yml
+                  sed -i 's#__IMAGE_TAG__#$(tag)#g' ./k8s/deployment.yml
                 displayName: 'Inject image tag into manifest'
 
               - task: Kubernetes@1
@@ -79,8 +79,8 @@ stages:
                   command: apply
                   useConfigurationFile: true
                   configuration: |
-                    *./k8s/deployment.yml
-                    *./snakegame/k8s/service.yml
+                    ./k8s/deployment.yml
+                    ./snakegame/k8s/service.yml
 
 
 - stage: Deploy_Prod
@@ -101,7 +101,7 @@ stages:
                 displayName: 'Checkout repository'
 
               - script: |
-                  sed -i 's#__IMAGE_TAG__#$(tag)#g' *./k8s/deployment.yml
+                  sed -i 's#__IMAGE_TAG__#$(tag)#g' ./k8s/deployment.yml
                 displayName: 'Inject image tag into manifest'
 
               - task: Kubernetes@1
@@ -113,5 +113,5 @@ stages:
                   command: apply
                   useConfigurationFile: true
                   configuration: |
-                    *./k8s/deployment.yml
-                    *./snakegame/k8s/service.yml
+                    ./k8s/deployment.yml
+                    ./snakegame/k8s/service.yml
