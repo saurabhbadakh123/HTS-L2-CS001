@@ -60,18 +60,20 @@ stages:
               echo "Checking build output..."
               ls -la target/
               echo "JAR file:"
-              find target -name "*.jar" -type f
+              JAR_FILE=$(find target -name "snakegame-*.jar" | head -1)
+              echo "##vso[task.setvariable variable=JAR_PATH]$JAR_FILE"
+              echo "Using JAR file: $JAR_FILE"
             displayName: 'Verify Build Output'
 
           # Publish artifacts
           - task: PublishBuildArtifacts@1
             displayName: 'Publish JAR Artifacts'
             inputs:
-              PathtoPublish: 'target/snakegame-0.0.1-SNAPSHOT.jar'
+              PathtoPublish: '$(JAR_PATH)'
               ArtifactName: 'drop'
               publishLocation: 'Container'
 
-          # Docker setup and permissions
+          # Docker setup
           - script: |
               echo "Setting up Docker..."
               sudo apt-get install -y docker.io
@@ -81,8 +83,15 @@ stages:
               docker --version
             displayName: 'Configure Docker Environment'
 
-          # ACR authentication (choose ONE of these options)
+          # Install Azure CLI
+          - script: |
+              echo "Installing Azure CLI..."
+              curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+              echo "Azure CLI version:"
+              az --version
+            displayName: 'Install Azure CLI'
 
+          # ACR authentication
           - task: AzureCLI@2
             displayName: 'Login to ACR with Azure AD'
             inputs:
@@ -91,16 +100,6 @@ stages:
               scriptLocation: 'inlineScript'
               inlineScript: |
                 az acr login --name $(containerRegistry)
-
-          # OR Option 2: Admin user authentication (if enabled in ACR)
-          # - script: |
-          #     docker login $(containerRegistry).azurecr.io \
-          #       -u $(ACR_USERNAME) \
-          #       -p $(ACR_PASSWORD)
-          #   displayName: 'Login to ACR'
-          #   env:
-          #     ACR_USERNAME: $(containerRegistry)
-          #     ACR_PASSWORD: $(acrAdminPassword) # Set as secret variable
 
           # Docker build and push
           - task: Docker@2
