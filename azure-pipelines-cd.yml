@@ -24,7 +24,7 @@ stages:
       displayName: 'Deploy to AKS (Dev)'
       environment: 'dev'
       pool:
-        vmImage: 'ubuntu-latest'
+        name: 'vmss-agent'
       strategy:
         runOnce:
           deploy:
@@ -54,7 +54,7 @@ stages:
       displayName: 'Deploy to AKS (Test)'
       environment: 'test'
       pool:
-        vmImage: 'ubuntu-latest'
+        name: 'vmss-agent'
       strategy:
         runOnce:
           deploy:
@@ -84,7 +84,7 @@ stages:
       displayName: 'Deploy to AKS (Prod)'
       environment: 'prod'
       pool:
-        vmImage: 'ubuntu-latest'
+        name: 'vmss-agent'
       strategy:
         runOnce:
           deploy:
