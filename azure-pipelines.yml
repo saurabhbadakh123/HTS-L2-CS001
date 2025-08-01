@@ -83,11 +83,21 @@ stages:
               command: 'login'
               containerRegistry: '$(containerRegistry)'
 
+          - script: |
+              echo "Setting up Docker..."
+              sudo apt-get update -y
+              sudo apt-get install -y docker.io
+              sudo groupadd docker || true
+              sudo usermod -aG docker $(whoami)
+              sudo chmod 666 /var/run/docker.sock
+              docker --version
+            displayName: 'Configure Docker Environment'
+
           # Docker build and push
           - task: Docker@2
             displayName: 'Build and Push Docker Image'
             inputs:
-              containerRegistry: '$(containerRegistry)'
+              containerRegistry: '$(containerRegistry)'  # Uses service connection
               repository: '$(imageName)'
               command: 'buildAndPush'
               Dockerfile: '**/Dockerfile'
