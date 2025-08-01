@@ -1,4 +1,11 @@
 trigger: none
+pr: none
+
+resources:
+  pipelines:
+    - pipeline: ciPipeline 
+      source: HTS-L2-CS001
+      trigger: true
 
 variables:
   - name: acrLoginServer
