@@ -32,7 +32,7 @@ stages:
               - checkout: self
                 displayName: 'Checkout repository'
               - script: |
-                  sed -i 's#__IMAGE_TAG__#$(tag)#g' manifests/deployment.yaml
+                  sed -i 's#__IMAGE_TAG__#$(tag)#g' deployment.yaml
                 displayName: 'Inject image tag into manifest'
 
               - task: Kubernetes@1
@@ -44,8 +44,8 @@ stages:
                   command: apply
                   useConfigurationFile: true
                   configuration: |
-                    manifests/deployment.yaml
-                    manifests/service.yaml
+                    deployment.yaml
+                    service.yaml
 
 - stage: Deploy_Test
   displayName: 'Deploy to Test'
@@ -64,7 +64,7 @@ stages:
               - checkout: self
                 displayName: 'Checkout repository'
               - script: |
-                  sed -i 's#__IMAGE_TAG__#$(tag)#g' manifests/deployment.yaml
+                  sed -i 's#__IMAGE_TAG__#$(tag)#g' deployment.yaml
                 displayName: 'Inject image tag into manifest'
 
               - task: Kubernetes@1
@@ -76,8 +76,8 @@ stages:
                   command: apply
                   useConfigurationFile: true
                   configuration: |
-                    manifests/deployment.yaml
-                    manifests/service.yaml
+                    deployment.yaml
+                    service.yaml
 
 - stage: Deploy_Prod
   displayName: 'Deploy to Prod'
@@ -96,7 +96,7 @@ stages:
               - checkout: self
                 displayName: 'Checkout repository'
               - script: |
-                  sed -i 's#__IMAGE_TAG__#$(tag)#g' manifests/deployment.yaml
+                  sed -i 's#__IMAGE_TAG__#$(tag)#g' deployment.yaml
                 displayName: 'Inject image tag into manifest'
 
               - task: Kubernetes@1
@@ -108,5 +108,5 @@ stages:
                   command: apply
                   useConfigurationFile: true
                   configuration: |
-                    manifests/deployment.yaml
-                    manifests/service.yaml
+                    deployment.yaml
+                    service.yaml
