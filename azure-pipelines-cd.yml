@@ -36,10 +36,8 @@ stages:
               - task: Kubernetes@1
                 displayName: 'Deploy to AKS - Dev'
                 inputs:
-                  connectionType: 'Azure Resource Manager'
-                  azureSubscriptionEndpoint: 'HTS-L2-AKS-SC'
-                  azureResourceGroup: 'HTS-L2-CS001-RG'
-                  kubernetesCluster: 'HTS-L2-CS001-AKS'
+                  connectionType: 'Kubernetes Service Connection'
+                  kubernetesServiceEndpoint: 'HTS-L2-AKS-SC'
                   namespace: 'dev'
                   command: apply
                   useConfigurationFile: true
@@ -68,10 +66,8 @@ stages:
               - task: Kubernetes@1
                 displayName: 'Deploy to AKS - Test'
                 inputs:
-                  connectionType: 'Azure Resource Manager'
-                  azureSubscriptionEndpoint: 'HTS-L2-AKS-SC'
-                  azureResourceGroup: 'HTS-L2-CS001-RG'
-                  kubernetesCluster: 'HTS-L2-CS001-AKS'
+                  connectionType: 'Kubernetes Service Connection'
+                  kubernetesServiceEndpoint: 'HTS-L2-AKS-SC'
                   namespace: 'test'
                   command: apply
                   useConfigurationFile: true
@@ -100,10 +96,8 @@ stages:
               - task: Kubernetes@1
                 displayName: 'Deploy to AKS - Prod'
                 inputs:
-                  connectionType: 'Azure Resource Manager'
-                  azureSubscriptionEndpoint: 'HTS-L2-AKS-SC'
-                  azureResourceGroup: 'HTS-L2-CS001-RG'
-                  kubernetesCluster: 'HTS-L2-CS001-AKS'
+                  connectionType: 'Kubernetes Service Connection'
+                  kubernetesServiceEndpoint: 'HTS-L2-AKS-SC'
                   namespace: 'prod'
                   command: apply
                   useConfigurationFile: true
