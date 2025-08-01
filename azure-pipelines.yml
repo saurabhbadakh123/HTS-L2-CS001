@@ -79,12 +79,12 @@ stages:
           - task: Docker@2
             displayName: 'Build and Push Image'
             inputs:
-              containerRegistry: 'none'
+              containerRegistry: '&(containerRegistry)'
               repository: '$(imageName)'
               command: 'buildAndPush'
               Dockerfile: '**/Dockerfile'
               tags: '$(tag)'
-              
+
           - script: |
               docker logout $(acrLoginServer)
             displayName: 'Logout from ACR'
