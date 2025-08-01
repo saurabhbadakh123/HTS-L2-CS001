@@ -29,6 +29,7 @@ stages:
 
                 - script: |
                     sed -i 's#__IMAGE_TAG__#$(tag)#g' k8s/deployment.yml
+                    echo "Using image: htsl2cs01.azurecr.io/snakegameapp:$(tag)"
                   displayName: Replace image tag
 
                 - task: Kubernetes@1
@@ -62,6 +63,7 @@ stages:
 
                 - script: |
                     sed -i 's#__IMAGE_TAG__#$(tag)#g' k8s/deployment.yml
+                    echo "Using image: htsl2cs01.azurecr.io/snakegameapp:$(tag)"
                   displayName: Replace image tag
 
                 - task: Kubernetes@1
@@ -95,6 +97,7 @@ stages:
 
                 - script: |
                     sed -i 's#__IMAGE_TAG__#$(tag)#g' k8s/deployment.yml
+                    echo "Using image: htsl2cs01.azurecr.io/snakegameapp:$(tag)"
                   displayName: Replace image tag
 
                 - task: Kubernetes@1

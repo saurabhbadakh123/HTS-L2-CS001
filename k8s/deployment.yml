@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
         - name: snakegame-container
-          image: htsl2cs01.azurecr.io/snakegameapp:#{tag}#
+          image: htsl2cs01.azurecr.io/snakegameapp:__IMAGE_TAG__
           ports:
             - containerPort: 8080
