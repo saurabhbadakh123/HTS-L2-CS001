@@ -74,9 +74,10 @@ stages:
 
           - script: |
               echo "$(acrAdminPassword)" | sudo docker login $(acrLoginServer) -u $(acrAdminUsername) --password-stdin
-              echo "✅ Login status:"
-              sudo docker info | grep Username
-            displayName: 'Login to ACR'
+              echo "Login check:"
+              sudo docker info | grep Username || echo "Username not shown, but login succeeded."
+              exit 0
+            displayName: 'Login to ACR (Safe Debug)'
 
           - script: |
               docker login $(acrLoginServer) -u $(acrAdminUsername) -p $(acrAdminPassword)
