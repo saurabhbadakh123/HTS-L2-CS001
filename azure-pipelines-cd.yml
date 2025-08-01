@@ -29,6 +29,8 @@ stages:
         runOnce:
           deploy:
             steps:
+              - checkout: self
+                displayName: 'Checkout repository'
               - script: |
                   sed -i 's#__IMAGE_TAG__#$(tag)#g' manifests/deployment.yaml
                 displayName: 'Inject image tag into manifest'
@@ -59,6 +61,8 @@ stages:
         runOnce:
           deploy:
             steps:
+              - checkout: self
+                displayName: 'Checkout repository'
               - script: |
                   sed -i 's#__IMAGE_TAG__#$(tag)#g' manifests/deployment.yaml
                 displayName: 'Inject image tag into manifest'
@@ -89,6 +93,8 @@ stages:
         runOnce:
           deploy:
             steps:
+              - checkout: self
+                displayName: 'Checkout repository'
               - script: |
                   sed -i 's#__IMAGE_TAG__#$(tag)#g' manifests/deployment.yaml
                 displayName: 'Inject image tag into manifest'
