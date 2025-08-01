@@ -4,19 +4,13 @@ trigger:
       - main
 
 variables:
-  - name: imageName
-    value: 'snakegameapp'
-  - name: containerRegistry
-    value: 'HTS-L2-ACR-SC'
-  - name: tag
-    value: '$(Build.BuildId)'
-  - name: mavenVersion
-    value: '3.9.6'
-  - name: javaVersion
-    value: '17'
-  - name: javaHome
-    value: '/usr/lib/jvm/java-17-openjdk-amd64'
-  - group: ACR-Credentials  # Reference the variable group
+  - group: ACR-Credentials  
+  imageName: 'snakegameapp'
+  containerRegistry: 'HTS-L2-ACR-SC'
+  tag: '$(Build.BuildId)'
+  mavenVersion: '3.9.6'
+  javaVersion: '17'
+  javaHome: '/usr/lib/jvm/java-17-openjdk-amd64'
 
 stages:
   - stage: Build
@@ -81,7 +75,8 @@ stages:
               docker --version
             displayName: 'Configure Docker Environment'
 
-          # ACR authentication
+          # ACR authentication (choose ONE of these options)
+
           - task: AzureCLI@2
             displayName: 'Login to ACR with Azure AD'
             inputs:
@@ -90,6 +85,16 @@ stages:
               scriptLocation: 'inlineScript'
               inlineScript: |
                 az acr login --name $(containerRegistry)
+
+          # OR Option 2: Admin user authentication (if enabled in ACR)
+          # - script: |
+          #     docker login $(containerRegistry).azurecr.io \
+          #       -u $(ACR_USERNAME) \
+          #       -p $(ACR_PASSWORD)
+          #   displayName: 'Login to ACR'
+          #   env:
+          #     ACR_USERNAME: $(containerRegistry)
+          #     ACR_PASSWORD: $(acrAdminPassword) # Set as secret variable
 
           # Docker build and push
           - task: Docker@2
