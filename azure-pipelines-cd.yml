@@ -28,7 +28,7 @@ stages:
                 - checkout: self
 
                 - script: |
-                    sed -i 's#__IMAGE_TAG__#$(tag)#g' k8s/deployment.yml
+                    sed -i 's#__IMAGE_TAG__#$(tag)#g' k8s/deployment-dev.yml
                     echo "Using image: htsl2cs01.azurecr.io/snakegameapp:$(tag)"
                   displayName: Replace image tag
 
@@ -42,7 +42,7 @@ stages:
                     namespace: 'dev'
                     command: 'apply'
                     useConfigurationFile: true
-                    configuration: 'k8s/deployment.yml'
+                    configuration: 'k8s/deployment-dev.yml'
                     secretType: 'None'
 
   - stage: Deploy_Test
@@ -62,7 +62,7 @@ stages:
                 - checkout: self
 
                 - script: |
-                    sed -i 's#__IMAGE_TAG__#$(tag)#g' k8s/deployment.yml
+                    sed -i 's#__IMAGE_TAG__#$(tag)#g' k8s/deployment-test.yml
                     echo "Using image: htsl2cs01.azurecr.io/snakegameapp:$(tag)"
                   displayName: Replace image tag
 
@@ -76,7 +76,7 @@ stages:
                     namespace: 'test'
                     command: 'apply'
                     useConfigurationFile: true
-                    configuration: 'k8s/deployment.yml'
+                    configuration: 'k8s/deployment-test.yml'
                     secretType: 'None'
 
   - stage: Deploy_Prod
@@ -96,7 +96,7 @@ stages:
                 - checkout: self
 
                 - script: |
-                    sed -i 's#__IMAGE_TAG__#$(tag)#g' k8s/deployment.yml
+                    sed -i 's#__IMAGE_TAG__#$(tag)#g' k8s/deployment-prod.yml
                     echo "Using image: htsl2cs01.azurecr.io/snakegameapp:$(tag)"
                   displayName: Replace image tag
 
@@ -110,5 +110,5 @@ stages:
                     namespace: 'prod'
                     command: 'apply'
                     useConfigurationFile: true
-                    configuration: 'k8s/deployment.yml'
+                    configuration: 'k8s/deployment-prod.yml'
                     secretType: 'None'
