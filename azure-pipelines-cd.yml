@@ -35,7 +35,7 @@ stages:
                   displayName: Apply Kubernetes Manifests (Dev)
                   inputs:
                     connectionType: 'Azure Resource Manager'
-                    azureSubscription: 'HTS-L2-AKS-SC'
+                    azureSubscriptionEndpoint: 'HTS-L2-ARM-SC'
                     azureResourceGroup: 'HTS-L2-CS001-RG'
                     kubernetesCluster: 'HTS-L2-CS001-AKS'
                     namespace: 'dev'
@@ -68,7 +68,7 @@ stages:
                   displayName: Apply Kubernetes Manifests (Test)
                   inputs:
                     connectionType: 'Azure Resource Manager'
-                    azureSubscription: 'HTS-L2-AKS-SC'
+                    azureSubscriptionEndpoint: 'HTS-L2-ARM-SC'
                     azureResourceGroup: 'HTS-L2-CS001-RG'
                     kubernetesCluster: 'HTS-L2-CS001-AKS'
                     namespace: 'test'
@@ -101,7 +101,7 @@ stages:
                   displayName: Apply Kubernetes Manifests (Prod)
                   inputs:
                     connectionType: 'Azure Resource Manager'
-                    azureSubscription: 'HTS-L2-AKS-SC'
+                    azureSubscriptionEndpoint: 'HTS-L2-ARM-SC'
                     azureResourceGroup: 'HTS-L2-CS001-RG'
                     kubernetesCluster: 'HTS-L2-CS001-AKS'
                     namespace: 'prod'
