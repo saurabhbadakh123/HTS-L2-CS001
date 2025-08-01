@@ -4,19 +4,12 @@ trigger:
       - main
 
 variables:
-  - group: ACR-Credentials
-  - name: imageName
-    value: 'snakegameapp'
-  - name: containerRegistry
-    value: 'HTS-L2-ACR-SC'
-  - name: tag
-    value: '$(Build.BuildId)'
-  - name: mavenVersion
-    value: '3.9.6'
-  - name: javaVersion
-    value: '17'
-  - name: javaHome
-    value: '/usr/lib/jvm/java-17-openjdk-amd64'
+  imageName: 'snakegameapp'
+  containerRegistry: 'HTS-L2-ACR-SC'
+  tag: '$(Build.BuildId)'
+  mavenVersion: '3.9.6'  # Specify Maven version
+  javaVersion: '17'
+  javaHome: '/usr/lib/jvm/java-17-openjdk-amd64'
 
 stages:
   - stage: Build
@@ -27,10 +20,11 @@ stages:
         pool:
           name: 'vmss-agent'
           demands:
-          - agent.os -equals Linux
+          - agent.os -equals Linux  # Ensure Linux agents
         
         steps:
-          # Install JDK 17
+
+          # Install JDK 17 and setup environment
           - script: |
               echo "Installing JDK $(javaVersion)..."
               sudo apt-get update -y
@@ -41,8 +35,8 @@ stages:
               java -version
               javac -version
             displayName: 'Install and Configure JDK $(javaVersion)'
-          
-          # Maven build
+
+          # Maven build with test execution
           - task: Maven@3
             displayName: 'Maven Build and Test'
             inputs:
@@ -54,58 +48,46 @@ stages:
               javaHomeOption: 'Path'
               jdkDirectory: '$(javaHome)'
               mavenVersionOption: 'Default'
+              mavenAuthenticateFeed: false
+              sonarQubeRunAnalysis: false
 
-          # Verify JAR file
           - script: |
-              echo "Checking build output..."
+              echo "Listing built artifacts..."
               ls -la target/
               echo "JAR file:"
-              JAR_FILE=$(find target -name "snakegame-*.jar" | head -1)
-              echo "##vso[task.setvariable variable=JAR_PATH]$JAR_FILE"
-              echo "Using JAR file: $JAR_FILE"
-            displayName: 'Verify Build Output'
+              find target -name "*.jar" -type f
+            displayName: 'Verify JAR File Exists'
 
-          # Publish artifacts
+          # Publish build artifacts
           - task: PublishBuildArtifacts@1
             displayName: 'Publish JAR Artifacts'
             inputs:
-              PathtoPublish: '$(JAR_PATH)'
+              PathtoPublish: 'target/snakegame-0.0.1-SNAPSHOT.jar'
               ArtifactName: 'drop'
               publishLocation: 'Container'
-
-          # Docker setup
+            
+          # Build and push Docker image
           - script: |
-              echo "Setting up Docker..."
-              sudo apt-get install -y docker.io
+              echo "Setting up Docker permissions..."
               sudo groupadd docker || true
               sudo usermod -aG docker $(whoami)
               sudo chmod 666 /var/run/docker.sock
               docker --version
-            displayName: 'Configure Docker Environment'
-
-          # Install Azure CLI
-          - script: |
-              echo "Installing Azure CLI..."
-              curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-              echo "Azure CLI version:"
-              az --version
-            displayName: 'Install Azure CLI'
-
-          # ACR authentication
-          - task: AzureCLI@2
-            displayName: 'Login to ACR with Azure AD'
+              docker info
+            displayName: 'Configure Docker Access'
+            
+          # Login to ACR
+          - task: Docker@2
+            displayName: 'Login to ACR'
             inputs:
-              azureSubscription: 'HTS-L2-ARM-SC'
-              scriptType: 'bash'
-              scriptLocation: 'inlineScript'
-              inlineScript: |
-                az acr login --name $(containerRegistry)
+              command: 'login'
+              containerRegistry: '$(containerRegistry)'
 
           # Docker build and push
           - task: Docker@2
             displayName: 'Build and Push Docker Image'
             inputs:
-              containerRegistry: 'HTS-L2-ACR-SC'
+              containerRegistry: '$(containerRegistry)'
               repository: '$(imageName)'
               command: 'buildAndPush'
               Dockerfile: '**/Dockerfile'
