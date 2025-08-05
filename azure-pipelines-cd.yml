@@ -1,153 +1,34 @@
-trigger: none
-pr: none
+steps:
+- checkout: self
 
-resources:
-  pipelines:
-    - pipeline: ciPipeline
-      source: Thivagar007.HTS-L2-CS001
-      trigger: true
+# 1. Build and push image
+- task: Docker@2
+  displayName: 'Build and Push'
+  inputs:
+    command: 'buildAndPush'
+    repository: 'python-app'
+    dockerfile: 'Dockerfile'
+    containerRegistry: 'python-sc'
+    tags: 'latest'
 
-variables:
-  acrLoginServer: 'htsl2cs01.azurecr.io'
-  imageName: 'snakegameapp'
-  tag: $(resources.pipeline.ciPipeline.runName)
+# 2. Deploy to AKS (with fixes)
+- task: AzureCLI@2
+  displayName: 'Deploy to AKS'
+  timeoutInMinutes: 2  # Prevents hanging
+  inputs:
+    azureSubscription: 'service-connection'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      # Get AKS credentials
+      az aks get-credentials \
+        --resource-group pythonapp-rg \
+        --name pythonapp-aks \
+        --overwrite-existing
 
-stages:
-  - stage: Deploy_Dev
-    displayName: Deploy to Dev
-    jobs:
-      - deployment: DeployDev
-        displayName: Deploy to AKS - Dev
-        environment: 'dev'
-        pool:
-          name: 'vmss-agent'
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - checkout: self
+      # Apply deployment (absolute path)
+      kubectl apply -f $(Build.SourcesDirectory)/k8s-deployment.yml
 
-                - script: |
-                    sed -i 's#__IMAGE_TAG__#$(tag)#g' k8s/deployment-dev.yml
-                    echo "Using image: $(acrLoginServer)/$(imageName):$(tag)"
-                  displayName: Replace image tag in Dev manifest
-
-                - task: Kubernetes@1
-                  displayName: Apply Deployment (Dev)
-                  inputs:
-                    connectionType: 'Azure Resource Manager'
-                    azureSubscriptionEndpoint: 'HTS-L2-ARM-SC'
-                    azureResourceGroup: 'HTS-L2-CS001-RG'
-                    kubernetesCluster: 'HTS-L2-CS001-AKS'
-                    namespace: 'dev'
-                    command: 'apply'
-                    useConfigurationFile: true
-                    configuration: 'k8s/deployment-dev.yml'
-                    secretType: 'None'
-
-                - task: Kubernetes@1
-                  displayName: Apply Service (Dev)
-                  inputs:
-                    connectionType: 'Azure Resource Manager'
-                    azureSubscriptionEndpoint: 'HTS-L2-ARM-SC'
-                    azureResourceGroup: 'HTS-L2-CS001-RG'
-                    kubernetesCluster: 'HTS-L2-CS001-AKS'
-                    namespace: 'dev'
-                    command: 'apply'
-                    useConfigurationFile: true
-                    configuration: 'k8s/service-dev.yml'
-                    secretType: 'None'
-
-  - stage: Deploy_Test
-    displayName: Deploy to Test
-    dependsOn: Deploy_Dev
-    condition: succeeded()
-    jobs:
-      - deployment: DeployTest
-        displayName: Deploy to AKS - Test
-        environment: 'test'
-        pool:
-          name: 'vmss-agent'
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - checkout: self
-
-                - script: |
-                    sed -i 's#__IMAGE_TAG__#$(tag)#g' k8s/deployment-test.yml
-                    echo "Using image: $(acrLoginServer)/$(imageName):$(tag)"
-                  displayName: Replace image tag in Test manifest
-
-                - task: Kubernetes@1
-                  displayName: Apply Deployment (Test)
-                  inputs:
-                    connectionType: 'Azure Resource Manager'
-                    azureSubscriptionEndpoint: 'HTS-L2-ARM-SC'
-                    azureResourceGroup: 'HTS-L2-CS001-RG'
-                    kubernetesCluster: 'HTS-L2-CS001-AKS'
-                    namespace: 'test'
-                    command: 'apply'
-                    useConfigurationFile: true
-                    configuration: 'k8s/deployment-test.yml'
-                    secretType: 'None'
-
-                - task: Kubernetes@1
-                  displayName: Apply Service (Test)
-                  inputs:
-                    connectionType: 'Azure Resource Manager'
-                    azureSubscriptionEndpoint: 'HTS-L2-ARM-SC'
-                    azureResourceGroup: 'HTS-L2-CS001-RG'
-                    kubernetesCluster: 'HTS-L2-CS001-AKS'
-                    namespace: 'test'
-                    command: 'apply'
-                    useConfigurationFile: true
-                    configuration: 'k8s/service-test.yml'
-                    secretType: 'None'
-
-  - stage: Deploy_Prod
-    displayName: Deploy to Prod
-    dependsOn: Deploy_Test
-    condition: succeeded()
-    jobs:
-      - deployment: DeployProd
-        displayName: Deploy to AKS - Prod
-        environment: 'prod'
-        pool:
-          name: 'vmss-agent'
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - checkout: self
-
-                - script: |
-                    sed -i 's#__IMAGE_TAG__#$(tag)#g' k8s/deployment-prod.yml
-                    echo "Using image: $(acrLoginServer)/$(imageName):$(tag)"
-                  displayName: Replace image tag in Prod manifest
-
-                - task: Kubernetes@1
-                  displayName: Apply Deployment (Prod)
-                  inputs:
-                    connectionType: 'Azure Resource Manager'
-                    azureSubscriptionEndpoint: 'HTS-L2-ARM-SC'
-                    azureResourceGroup: 'HTS-L2-CS001-RG'
-                    kubernetesCluster: 'HTS-L2-CS001-AKS'
-                    namespace: 'prod'
-                    command: 'apply'
-                    useConfigurationFile: true
-                    configuration: 'k8s/deployment-prod.yml'
-                    secretType: 'None'
-
-                - task: Kubernetes@1
-                  displayName: Apply Service (Prod)
-                  inputs:
-                    connectionType: 'Azure Resource Manager'
-                    azureSubscriptionEndpoint: 'HTS-L2-ARM-SC'
-                    azureResourceGroup: 'HTS-L2-CS001-RG'
-                    kubernetesCluster: 'HTS-L2-CS001-AKS'
-                    namespace: 'prod'
-                    command: 'apply'
-                    useConfigurationFile: true
-                    configuration: 'k8s/service-prod.yml'
-                    secretType: 'None'
+      # Quick verification (no -w flag)
+      kubectl get pods
+      echo "Deployment completed successfully"
