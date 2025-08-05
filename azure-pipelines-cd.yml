@@ -1,34 +1,20 @@
-steps:
-- checkout: self
+# Use official Python base image
+FROM python:3.9-slim
 
-# 1. Build and push image
-- task: Docker@2
-  displayName: 'Build and Push'
-  inputs:
-    command: 'buildAndPush'
-    repository: 'python-app'
-    dockerfile: 'Dockerfile'
-    containerRegistry: 'python-sc'
-    tags: 'latest'
+# Set working directory
+WORKDIR /app
 
-# 2. Deploy to AKS (with fixes)
-- task: AzureCLI@2
-  displayName: 'Deploy to AKS'
-  timeoutInMinutes: 2  # Prevents hanging
-  inputs:
-    azureSubscription: 'service-connection'
-    scriptType: 'bash'
-    scriptLocation: 'inlineScript'
-    inlineScript: |
-      # Get AKS credentials
-      az aks get-credentials \
-        --resource-group pythonapp-rg \
-        --name pythonapp-aks \
-        --overwrite-existing
+# Copy only requirements first (optimizes caching)
+COPY requirements.txt .
 
-      # Apply deployment (absolute path)
-      kubectl apply -f $(Build.SourcesDirectory)/k8s-deployment.yml
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-      # Quick verification (no -w flag)
-      kubectl get pods
-      echo "Deployment completed successfully"
+# Copy application code
+COPY . .
+
+# Expose port (optional, for documentation)
+EXPOSE 80
+
+# Run the application
+CMD ["python", "app.py"]
